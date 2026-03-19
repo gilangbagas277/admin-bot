@@ -6,16 +6,20 @@ const { BOT_TOKEN, MONGO_URI, ADMIN_ID, CHANNEL_ID } = process.env;
 const SHARE_LINK = "https://t.me/+yg8YTJV3Rk0wM2I1";
 
 // --- DATABASE CONNECTION (Singleton Pattern for Vercel) ---
+// --- DATABASE CONNECTION (Final Stability Fix) ---
 let cachedDb = null;
 const connectDB = async () => {
-    if (cachedDb) return cachedDb;
+    if (cachedDb && mongoose.connection.readyState === 1) return cachedDb;
     try {
-        const db = await mongoose.connect(MONGO_URI);
+        const db = await mongoose.connect(process.env.MONGO_URI, {
+            serverSelectionTimeoutMS: 5000,
+            dbName: 'BotWelcomeDB'
+        });
         cachedDb = db;
-        console.log("✅ MongoDB Connected");
+        console.log("✅ MongoDB Connected Successfully");
         return db;
     } catch (err) {
-        console.error("❌ MongoDB Connection Error:", err);
+        console.error("❌ MongoDB Connection Error:", err.message);
     }
 };
 
